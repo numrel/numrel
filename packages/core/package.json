@@ -1,0 +1,48 @@
+{
+  "name": "@numrel/core",
+  "version": "0.0.1",
+  "description": "The modern, type-safe successor to Numeral.js",
+  "keywords": [
+    "numeral",
+    "number",
+    "formatting",
+    "typescript",
+    "numrel"
+  ],
+  "homepage": "https://numrel.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/numrel/numrel"
+  },
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.2",
+    "@vitest/coverage-v8": "^1.2.2"
+  }
+}
