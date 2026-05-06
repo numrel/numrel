@@ -10,10 +10,6 @@ import { enUS } from '../../locales/en-US';
 import { DEFAULT_CONFIG } from '../../core/numrel';
 
 describe('formatPercentage()', () => {
-  // ─────────────────────────────────────────
-  // Basic Percentage
-  // ─────────────────────────────────────────
-
   describe('basic percentage formatting', () => {
     it('should format 0.5 as 50%', () => {
       expect(formatPercentage(0.5, '0%', DEFAULT_CONFIG, enUS)).toBe('50%');
@@ -38,11 +34,12 @@ describe('formatPercentage()', () => {
         '50.5%',
       );
     });
-  });
 
-  // ─────────────────────────────────────────
-  // Negative Percentage
-  // ─────────────────────────────────────────
+    // ✅ NEW - thousands separator in percentage
+    it('should format large percentage with thousands', () => {
+      expect(formatPercentage(10, '0,0%', DEFAULT_CONFIG, enUS)).toBe('1,000%');
+    });
+  });
 
   describe('negative percentage formatting', () => {
     it('should format negative percentage', () => {
@@ -56,14 +53,41 @@ describe('formatPercentage()', () => {
     });
   });
 
-  // ─────────────────────────────────────────
-  // No Scaling
-  // ─────────────────────────────────────────
-
   describe('without scaling', () => {
     it('should not scale when scalePercentBy100 is false', () => {
       const config = { ...DEFAULT_CONFIG, scalePercentBy100: false };
       expect(formatPercentage(50, '0%', config, enUS)).toBe('50%');
+    });
+
+    // ✅ NEW - no scale with decimal
+    it('should not scale decimal when scalePercentBy100 is false', () => {
+      const config = { ...DEFAULT_CONFIG, scalePercentBy100: false };
+      expect(formatPercentage(12.34, '0.00%', config, enUS)).toBe('12.34%');
+    });
+  });
+
+  // ✅ NEW - prefix % format (covers lines 50-51)
+  describe('prefix percentage format', () => {
+    it('should format with % as prefix', () => {
+      expect(formatPercentage(0.5, '%0', DEFAULT_CONFIG, enUS)).toBe('%50');
+    });
+
+    it('should format negative with % as prefix', () => {
+      expect(formatPercentage(-0.5, '%0', DEFAULT_CONFIG, enUS)).toBe('-%50');
+    });
+  });
+
+  describe('percentage with thousands', () => {
+    it('should format negative large percentage with thousands', () => {
+      expect(formatPercentage(-10, '0,0%', DEFAULT_CONFIG, enUS)).toBe(
+        '-1,000%',
+      );
+    });
+
+    it('should format large percentage with thousands and decimal', () => {
+      expect(formatPercentage(10, '0,0.00%', DEFAULT_CONFIG, enUS)).toBe(
+        '1,000.00%',
+      );
     });
   });
 });

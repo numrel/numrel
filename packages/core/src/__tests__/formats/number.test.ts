@@ -6,11 +6,14 @@ import { formatNumber } from '../../formats/number';
 // Locale
 import { enUS } from '../../locales/en-US';
 
-describe('formatNumber()', () => {
-  // ─────────────────────────────────────────
-  // Basic Numbers
-  // ─────────────────────────────────────────
+// ✅ NEW - German locale for delimiter tests
+const deLocale = {
+  ...enUS,
+  name: 'de',
+  delimiters: { thousands: '.', decimal: ',' },
+};
 
+describe('formatNumber()', () => {
   describe('basic number formatting', () => {
     it('should format integer with no format', () => {
       expect(formatNumber(1000, '0', enUS)).toBe('1000');
@@ -41,10 +44,6 @@ describe('formatNumber()', () => {
     });
   });
 
-  // ─────────────────────────────────────────
-  // Negative Numbers
-  // ─────────────────────────────────────────
-
   describe('negative number formatting', () => {
     it('should format negative number', () => {
       expect(formatNumber(-1000, '0,0', enUS)).toBe('-1,000');
@@ -57,11 +56,12 @@ describe('formatNumber()', () => {
     it('should format negative with brackets', () => {
       expect(formatNumber(-1000, '(0,0)', enUS)).toBe('(1,000)');
     });
-  });
 
-  // ─────────────────────────────────────────
-  // Signed Numbers
-  // ─────────────────────────────────────────
+    // ✅ NEW - negative with brackets and decimals
+    it('should format negative with brackets and decimals', () => {
+      expect(formatNumber(-1000.5, '(0,0.00)', enUS)).toBe('(1,000.50)');
+    });
+  });
 
   describe('signed number formatting', () => {
     it('should show + for positive numbers', () => {
@@ -76,10 +76,6 @@ describe('formatNumber()', () => {
       expect(formatNumber(0, '+0', enUS)).toBe('+0');
     });
   });
-
-  // ─────────────────────────────────────────
-  // Decimal Places
-  // ─────────────────────────────────────────
 
   describe('decimal places', () => {
     it('should format with 1 decimal', () => {
@@ -99,9 +95,43 @@ describe('formatNumber()', () => {
     });
   });
 
-  // ─────────────────────────────────────────
-  // Edge Cases
-  // ─────────────────────────────────────────
+  // ✅ NEW - Optional decimals (covers lines 147-164)
+  describe('optional decimal formatting [0]', () => {
+    it('should trim trailing zeros with optional format', () => {
+      expect(formatNumber(1.5, '0[.00]', enUS)).toBe('1.5');
+    });
+
+    it('should remove decimal when no fraction', () => {
+      expect(formatNumber(1, '0[.00]', enUS)).toBe('1');
+    });
+
+    it('should keep needed decimals', () => {
+      expect(formatNumber(1.56, '0[.00]', enUS)).toBe('1.56');
+    });
+
+    it('should handle optional decimals with thousands', () => {
+      expect(formatNumber(1000.5, '0,0[.00]', enUS)).toBe('1,000.5');
+    });
+
+    it('should handle optional decimals with zero value', () => {
+      expect(formatNumber(0, '0[.00]', enUS)).toBe('0');
+    });
+  });
+
+  // ✅ NEW - Non-US locale delimiter (covers lines 58-59)
+  describe('locale specific delimiters', () => {
+    it('should use locale thousands delimiter', () => {
+      expect(formatNumber(1000, '0,0', deLocale)).toBe('1.000');
+    });
+
+    it('should use locale decimal delimiter', () => {
+      expect(formatNumber(1000.5, '0,0.00', deLocale)).toBe('1.000,50');
+    });
+
+    it('should use locale decimal without thousands', () => {
+      expect(formatNumber(1.5, '0.00', deLocale)).toBe('1,50');
+    });
+  });
 
   describe('edge cases', () => {
     it('should handle very large numbers', () => {
@@ -114,6 +144,24 @@ describe('formatNumber()', () => {
 
     it('should handle negative zero', () => {
       expect(formatNumber(-0, '0,0', enUS)).toBe('0');
+    });
+  });
+
+  describe('optional decimal edge cases', () => {
+    it('should remove decimal point entirely when no fraction', () => {
+      expect(formatNumber(1000, '0[.00]', enUS)).toBe('1000');
+    });
+
+    it('should handle optional with exact decimals', () => {
+      expect(formatNumber(1.1, '0[.00]', enUS)).toBe('1.1');
+    });
+
+    it('should handle optional decimals with thousands separator', () => {
+      expect(formatNumber(1000, '0,0[.00]', enUS)).toBe('1,000');
+    });
+
+    it('should keep decimals when present in optional format', () => {
+      expect(formatNumber(1000.55, '0,0[.00]', enUS)).toBe('1,000.55');
     });
   });
 });

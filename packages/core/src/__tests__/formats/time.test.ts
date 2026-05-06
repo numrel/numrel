@@ -4,10 +4,6 @@ import { describe, it, expect } from 'vitest';
 import { formatTime } from '../../formats/time';
 
 describe('formatTime()', () => {
-  // ─────────────────────────────────────────
-  // HH:MM:SS Format
-  // ─────────────────────────────────────────
-
   describe('HH:MM:SS format', () => {
     it('should format seconds to HH:MM:SS', () => {
       expect(formatTime(3661, '00:00:00')).toBe('01:01:01');
@@ -32,11 +28,16 @@ describe('formatTime()', () => {
     it('should format large hours', () => {
       expect(formatTime(36000, '00:00:00')).toBe('10:00:00');
     });
-  });
 
-  // ─────────────────────────────────────────
-  // MM:SS Format
-  // ─────────────────────────────────────────
+    // ✅ NEW - with milliseconds (covers lines 62-63)
+    it('should format with milliseconds', () => {
+      expect(formatTime(1.5, '00:00:00.000')).toBe('00:00:01.500');
+    });
+
+    it('should format zero with milliseconds', () => {
+      expect(formatTime(0, '00:00:00.000')).toBe('00:00:00.000');
+    });
+  });
 
   describe('MM:SS format', () => {
     it('should format seconds to MM:SS', () => {
@@ -51,10 +52,6 @@ describe('formatTime()', () => {
       expect(formatTime(3600, '00:00')).toBe('60:00');
     });
   });
-
-  // ─────────────────────────────────────────
-  // Duration Format (new feature!)
-  // ─────────────────────────────────────────
 
   describe('duration format', () => {
     it('should format as duration with hours', () => {
@@ -72,15 +69,26 @@ describe('formatTime()', () => {
     it('should format zero duration', () => {
       expect(formatTime(0, 'duration')).toBe('0s');
     });
-  });
 
-  // ─────────────────────────────────────────
-  // Negative Time
-  // ─────────────────────────────────────────
+    // ✅ NEW - hours only duration (covers 96-97)
+    it('should format hours and minutes duration without seconds', () => {
+      expect(formatTime(3600, 'duration')).toBe('1h');
+    });
+
+    // ✅ NEW - hours and minutes no seconds
+    it('should format hours and minutes no seconds', () => {
+      expect(formatTime(3660, 'duration')).toBe('1h 1m');
+    });
+  });
 
   describe('negative time', () => {
     it('should format negative time', () => {
       expect(formatTime(-3661, '00:00:00')).toBe('-01:01:01');
+    });
+
+    // ✅ NEW - negative MM:SS
+    it('should format negative MM:SS', () => {
+      expect(formatTime(-90, '00:00')).toBe('-01:30');
     });
   });
 });

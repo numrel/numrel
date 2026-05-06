@@ -138,4 +138,104 @@ describe('Parser - parseInput()', () => {
       expect(parseInput('1.5k', enUS)).toBe(1500);
     });
   });
+
+  // ✅ NEW - covers lines 43-49 (locale specific string parsing)
+  describe('locale specific parsing', () => {
+    const deLocale = {
+      ...enUS,
+      name: 'de',
+      delimiters: { thousands: '.', decimal: ',' },
+      currency: { ...enUS.currency, symbol: '€' },
+    };
+
+    it('should parse German formatted number', () => {
+      expect(parseInput('1.000', deLocale)).toBe(1000);
+    });
+
+    it('should parse German decimal', () => {
+      expect(parseInput('1,50', deLocale)).toBe(1.5);
+    });
+
+    it('should parse German currency', () => {
+      expect(parseInput('€1.000', deLocale)).toBe(1000);
+    });
+  });
+
+  // ✅ NEW - covers lines 51-55 (percentage edge cases)
+  describe('percentage parsing edge cases', () => {
+    it('should parse 0%', () => {
+      expect(parseInput('0%', enUS)).toBe(0);
+    });
+
+    it('should parse 100%', () => {
+      expect(parseInput('100%', enUS)).toBe(1);
+    });
+
+    it('should parse negative percentage', () => {
+      expect(parseInput('-50%', enUS)).toBe(-0.5);
+    });
+  });
+
+  // ✅ NEW - covers lines 68-69 (NumrelInstance input)
+  describe('NumrelInstance as input', () => {
+    it('should extract value from NumrelInstance', () => {
+      const mockInstance = {
+        value: () => 1000,
+      };
+      expect(parseInput(mockInstance, enUS)).toBe(1000);
+    });
+
+    it('should handle NumrelInstance returning null', () => {
+      const mockInstance = {
+        value: () => null,
+      };
+      expect(parseInput(mockInstance, enUS)).toBeNull();
+    });
+  });
+
+  // ✅ NEW - abbreviation edge cases
+  describe('abbreviation parsing edge cases', () => {
+    it('should parse 1.5k', () => {
+      expect(parseInput('1.5k', enUS)).toBe(1500);
+    });
+
+    it('should parse 2.5m', () => {
+      expect(parseInput('2.5m', enUS)).toBe(2500000);
+    });
+
+    it('should parse 1.5b', () => {
+      expect(parseInput('1.5b', enUS)).toBe(1500000000);
+    });
+
+    it('should parse 1.5t', () => {
+      expect(parseInput('1.5t', enUS)).toBe(1500000000000);
+    });
+
+    // ✅ Uppercase abbreviations
+    it('should parse uppercase K', () => {
+      expect(parseInput('1K', enUS)).toBe(1000);
+    });
+
+    it('should parse uppercase M', () => {
+      expect(parseInput('1M', enUS)).toBe(1000000);
+    });
+  });
+
+  describe('negative string parsing edge cases', () => {
+    it('should parse negative percentage string', () => {
+      expect(parseInput('-25%', enUS)).toBe(-0.25);
+    });
+
+    it('should parse negative currency string', () => {
+      expect(parseInput('-$1,000', enUS)).toBe(-1000);
+    });
+
+    it('should parse string with only decimal', () => {
+      expect(parseInput('.5', enUS)).toBe(0.5);
+    });
+
+    it('should parse negative abbreviated', () => {
+      expect(parseInput('-1.5k', enUS)).toBe(-1500);
+    });
+  });
 });

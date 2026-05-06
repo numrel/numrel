@@ -47,6 +47,31 @@ describe('Math Operations', () => {
       expect(getDecimalPlaces(1.5)).toBe(1);
       expect(getDecimalPlaces(1000)).toBe(0);
     });
+
+    // ✅ NEW - exponential notation (covers lines 19-22)
+    it('should handle exponential e- notation', () => {
+      expect(getDecimalPlaces(1e-7)).toBe(7);
+    });
+
+    it('should handle exponential e+ notation', () => {
+      expect(getDecimalPlaces(1e7)).toBe(0);
+    });
+
+    // ✅ NEW - covers lines 25-26
+    it('should handle non finite in getDecimalPlaces', () => {
+      expect(getDecimalPlaces(Infinity)).toBe(0);
+      expect(getDecimalPlaces(-Infinity)).toBe(0);
+      expect(getDecimalPlaces(NaN)).toBe(0);
+    });
+
+    // ✅ NEW - very small numbers
+    it('should handle very small decimal numbers', () => {
+      expect(getDecimalPlaces(0.00001)).toBe(5);
+    });
+
+    it('should handle integer in getDecimalPlaces', () => {
+      expect(getDecimalPlaces(100)).toBe(0);
+    });
   });
 
   // ─────────────────────────────────────────
@@ -318,6 +343,30 @@ describe('Math Operations', () => {
 
     it('should floor negative number', () => {
       expect(floor(-1.1)).toBe(-2);
+    });
+  });
+
+  describe('precision edge cases', () => {
+    it('should handle positive exponential e+ notation', () => {
+      expect(getDecimalPlaces(1.5e10)).toBe(0);
+    });
+
+    it('should handle number with e+ and decimals', () => {
+      expect(getDecimalPlaces(1.23e5)).toBe(0);
+    });
+
+    it('should handle e- notation correctly', () => {
+      expect(getDecimalPlaces(1.5e-3)).toBe(4);
+    });
+
+    it('should handle very small e- number', () => {
+      expect(getDecimalPlaces(1e-10)).toBe(10);
+    });
+
+    // ✅ ADD: verify what 1.5e-3 actually is
+    it('should confirm 1.5e-3 equals 0.0015', () => {
+      expect(1.5e-3).toBe(0.0015);
+      expect(getDecimalPlaces(0.0015)).toBe(4);
     });
   });
 });

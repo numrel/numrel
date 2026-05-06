@@ -137,6 +137,60 @@ describe('Numrel Core Instance', () => {
     });
   });
 
+  describe('math operations edge cases', () => {
+    // ✅ NEW - covers lines 228-231 (abs, ceil, floor on null)
+    it('abs() returns null for null input', () => {
+      expect(numrel(null).abs().value()).toBeNull();
+    });
+
+    it('ceil() returns null for null input', () => {
+      expect(numrel(null).ceil().value()).toBeNull();
+    });
+
+    it('floor() returns null for null input', () => {
+      expect(numrel(null).floor().value()).toBeNull();
+    });
+
+    it('round() returns null for null input', () => {
+      expect(numrel(null).round().value()).toBeNull();
+    });
+
+    // ✅ NEW - covers lines 234-239 (clamp, power, modulo on null)
+    it('clamp() returns null for null input', () => {
+      expect(numrel(null).clamp(0, 100).value()).toBeNull();
+    });
+
+    it('power() returns null for null input', () => {
+      expect(numrel(null).power(2).value()).toBeNull();
+    });
+
+    it('modulo() returns null for null input', () => {
+      expect(numrel(null).modulo(3).value()).toBeNull();
+    });
+
+    // ✅ NEW - ceil/floor/round with precision
+    it('ceil() with precision', () => {
+      expect(numrel(1.001).ceil(2).value()).toBe(1.01);
+    });
+
+    it('floor() with precision', () => {
+      expect(numrel(1.999).floor(2).value()).toBe(1.99);
+    });
+
+    it('round() with precision', () => {
+      expect(numrel(1.005).round(2).value()).toBe(1.01);
+    });
+
+    // ✅ NEW - clamp edge cases
+    it('clamp() should clamp to min', () => {
+      expect(numrel(0).clamp(1, 10).value()).toBe(1);
+    });
+
+    it('clamp() should clamp to max', () => {
+      expect(numrel(20).clamp(1, 10).value()).toBe(10);
+    });
+  });
+
   // ─────────────────────────────────────────
   // Validation Methods
   // ─────────────────────────────────────────
@@ -201,6 +255,115 @@ describe('Numrel Core Instance', () => {
 
     it('isValid() → false for NaN', () => {
       expect(numrel(NaN).isValid()).toBe(false);
+    });
+  });
+
+  describe('NaN math operations', () => {
+    it('add() on NaN returns null value', () => {
+      expect(numrel(NaN).add(5).value()).toBeNull();
+    });
+
+    it('subtract() on NaN returns null value', () => {
+      expect(numrel(NaN).subtract(5).value()).toBeNull();
+    });
+
+    it('multiply() on NaN returns null value', () => {
+      expect(numrel(NaN).multiply(5).value()).toBeNull();
+    });
+
+    it('divide() on NaN returns null value', () => {
+      expect(numrel(NaN).divide(5).value()).toBeNull();
+    });
+
+    it('modulo() on NaN returns null value', () => {
+      expect(numrel(NaN).modulo(5).value()).toBeNull();
+    });
+
+    it('power() on NaN returns null value', () => {
+      expect(numrel(NaN).power(2).value()).toBeNull();
+    });
+
+    it('abs() on NaN returns null value', () => {
+      expect(numrel(NaN).abs().value()).toBeNull();
+    });
+
+    it('ceil() on NaN returns null value', () => {
+      expect(numrel(NaN).ceil().value()).toBeNull();
+    });
+
+    it('floor() on NaN returns null value', () => {
+      expect(numrel(NaN).floor().value()).toBeNull();
+    });
+
+    it('round() on NaN returns null value', () => {
+      expect(numrel(NaN).round().value()).toBeNull();
+    });
+
+    it('clamp() on NaN returns null value', () => {
+      expect(numrel(NaN).clamp(0, 10).value()).toBeNull();
+    });
+
+    // NaN validation
+    it('isValid() → false for NaN', () => {
+      expect(numrel(NaN).isValid()).toBe(false);
+    });
+
+    it('isInteger() → false for NaN', () => {
+      expect(numrel(NaN).isInteger()).toBe(false);
+    });
+
+    it('isFloat() → false for NaN', () => {
+      expect(numrel(NaN).isFloat()).toBe(false);
+    });
+
+    it('isPositive() → false for NaN', () => {
+      expect(numrel(NaN).isPositive()).toBe(false);
+    });
+
+    it('isNegative() → false for NaN', () => {
+      expect(numrel(NaN).isNegative()).toBe(false);
+    });
+
+    it('isZero() → false for NaN', () => {
+      expect(numrel(NaN).isZero()).toBe(false);
+    });
+
+    it('isFinite() → false for NaN', () => {
+      expect(numrel(NaN).isFinite()).toBe(false);
+    });
+
+    // NaN comparisons
+    it('greaterThan() → false for NaN', () => {
+      expect(numrel(NaN).greaterThan(5)).toBe(false);
+    });
+
+    it('lessThan() → false for NaN', () => {
+      expect(numrel(NaN).lessThan(5)).toBe(false);
+    });
+
+    it('equalTo() → false for NaN', () => {
+      expect(numrel(NaN).equalTo(5)).toBe(false);
+    });
+
+    it('between() → false for NaN', () => {
+      expect(numrel(NaN).between(1, 10)).toBe(false);
+    });
+
+    // NaN format
+    it('format() → nanFormat for NaN', () => {
+      expect(numrel(NaN).format('0,0')).toBe('NaN');
+    });
+
+    it('toString() → nanFormat for NaN', () => {
+      expect(numrel(NaN).toString()).toBe('NaN');
+    });
+
+    it('toJSON() → null for NaN', () => {
+      expect(numrel(NaN).toJSON()).toBeNull();
+    });
+
+    it('valueOf() → 0 for NaN', () => {
+      expect(numrel(NaN).valueOf()).toBe(0);
     });
   });
 
@@ -288,6 +451,37 @@ describe('Numrel Core Instance', () => {
       const cloned = original.clone();
       expect(cloned.value()).toBe(1000);
       expect(cloned).not.toBe(original);
+    });
+  });
+
+  describe('exponential format', () => {
+    it('should format in exponential notation', () => {
+      expect(numrel(1500000).format('0e+0')).toBe('2e+6');
+    });
+
+    it('should format in exponential with decimals', () => {
+      expect(numrel(1500000).format('0.00e+0')).toBe('1.50e+6');
+    });
+
+    it('should format small number in exponential', () => {
+      expect(numrel(0.0001).format('0e+0')).toBe('1e-4');
+    });
+
+    it('should format negative in exponential', () => {
+      expect(numrel(-1500000).format('0.00e+0')).toBe('-1.50e+6');
+    });
+
+    // ✅ ADD more exponential tests
+    it('should format with 1 decimal exponential', () => {
+      expect(numrel(1500000).format('0.0e+0')).toBe('1.5e+6');
+    });
+
+    it('should format zero in exponential', () => {
+      expect(numrel(0).format('0.00e+0')).toBe('0.00e+0');
+    });
+
+    it('should format small decimal in exponential', () => {
+      expect(numrel(0.000123).format('0.00e+0')).toBe('1.23e-4');
     });
   });
 });

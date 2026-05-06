@@ -1,4 +1,3 @@
-// src/formats/index.ts
 import { formatNumber } from './number';
 import { formatCurrency } from './currency';
 import { formatPercentage } from './percentage';
@@ -8,11 +7,6 @@ import { formatOrdinal } from './ordinal';
 import { formatAbbreviation } from './abbreviation';
 
 import type { NumrelConfig, LocaleConfig } from '../types';
-
-// ─────────────────────────────────────────
-// Main Format Router
-// Detects format type and routes accordingly
-// ─────────────────────────────────────────
 
 /**
  * The `format` function in TypeScript handles formatting of numbers based on different format strings
@@ -46,7 +40,7 @@ export const format = (
   locale: LocaleConfig,
 ): string => {
   // Time format → 00:00:00
-  if (formatString.includes(':')) {
+  if (formatString === 'duration' || formatString.includes(':')) {
     return formatTime(value, formatString);
   }
 
@@ -56,7 +50,7 @@ export const format = (
   }
 
   // Bytes → 0b, 0kb, 0mb
-  if (/[kmgt]?b$/i.test(formatString) && !formatString.includes('$')) {
+  if (/[kmgt]?i?b$/i.test(formatString) && !formatString.includes('$')) {
     return formatBytes(value, formatString, locale);
   }
 
@@ -69,7 +63,7 @@ export const format = (
   }
 
   // Ordinal → 0o
-  if (formatString.includes('o')) {
+  if (formatString.endsWith('o') || formatString.endsWith('0o')) {
     return formatOrdinal(value, formatString, locale);
   }
 
@@ -78,13 +72,34 @@ export const format = (
     return formatAbbreviation(value, formatString, locale);
   }
 
-  // Exponential → 0e+0
-  if (formatString.includes('e')) {
-    return value.toExponential(parseInt(formatString.split('.')[1] ?? '0', 10));
+  // ✅ FIX: Exponential → 0e+0, 0.00e+0
+  if (formatString.toLowerCase().includes('e')) {
+    return formatExponential(value, formatString);
   }
 
   // Default → number formatting
   return formatNumber(value, formatString, locale);
+};
+
+// ─────────────────────────────────────────
+// Exponential Format Helper
+// Handles: 0e+0, 0.00e+0
+// ─────────────────────────────────────────
+
+const formatExponential = (value: number, formatString: string): string => {
+  // ✅ Extract decimal places correctly
+  // '0.00e+0' → split by 'e' → ['0.00', '+0']
+  // then split by '.' → decimal part is '00' → length 2
+  const beforeE = formatString.toLowerCase().split('e')[0] ?? '0';
+  const decimalPart = beforeE.split('.')[1] ?? '';
+
+  // Count only digit characters for decimal places
+  const decimalPlaces = decimalPart.replace(/[^0]/g, '').length;
+
+  // Use toExponential with correct decimal places
+  const result = value.toExponential(decimalPlaces);
+
+  return result;
 };
 
 export { formatNumber } from './number';

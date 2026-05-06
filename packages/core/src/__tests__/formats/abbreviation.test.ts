@@ -82,4 +82,22 @@ describe('formatAbbreviation()', () => {
       expect(formatAbbreviation(1000000000, '0al', enUS)).toBe('1 billion');
     });
   });
+
+  describe('long form edge cases', () => {
+    it('should not abbreviate below 1000 in long form', () => {
+      expect(formatAbbreviation(999, '0al', enUS)).toBe('999');
+    });
+
+    it('should format 500 with no long form suffix', () => {
+      expect(formatAbbreviation(500, '0al', enUS)).toBe('500');
+    });
+
+    it('should format trillion in long form', () => {
+      expect(formatAbbreviation(1000000000000, '0al', enUS)).toBe('1 trillion');
+    });
+
+    it('should format negative billion in long form', () => {
+      expect(formatAbbreviation(-1000000000, '0al', enUS)).toBe('-1 billion');
+    });
+  });
 });

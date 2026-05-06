@@ -7,10 +7,6 @@ import { formatCurrency } from '../../formats/currency';
 import { enUS } from '../../locales/en-US';
 
 describe('formatCurrency()', () => {
-  // ─────────────────────────────────────────
-  // Basic Currency
-  // ─────────────────────────────────────────
-
   describe('basic currency formatting', () => {
     it('should format with dollar sign prefix', () => {
       expect(formatCurrency(1000, '$0,0', enUS)).toBe('$1,000');
@@ -27,11 +23,17 @@ describe('formatCurrency()', () => {
     it('should format zero', () => {
       expect(formatCurrency(0, '$0,0.00', enUS)).toBe('$0.00');
     });
-  });
 
-  // ─────────────────────────────────────────
-  // Negative Currency
-  // ─────────────────────────────────────────
+    // ✅ NEW - space between symbol and number (covers line 75)
+    it('should format with space between symbol and number', () => {
+      expect(formatCurrency(1000, '$ 0,0.00', enUS)).toBe('$ 1,000.00');
+    });
+
+    // ✅ NEW - currency code format
+    it('should format with currency code', () => {
+      expect(formatCurrency(1000, 'USD 0,0.00', enUS)).toBe('USD 1,000.00');
+    });
+  });
 
   describe('negative currency formatting', () => {
     it('should format negative with minus', () => {
@@ -41,11 +43,17 @@ describe('formatCurrency()', () => {
     it('should format negative with brackets', () => {
       expect(formatCurrency(-1000, '($0,0.00)', enUS)).toBe('($1,000.00)');
     });
-  });
 
-  // ─────────────────────────────────────────
-  // Suffix Currency
-  // ─────────────────────────────────────────
+    // ✅ NEW - negative suffix currency (covers lines 92-93)
+    it('should format negative suffix currency', () => {
+      expect(formatCurrency(-1000, '0,0.00 $', enUS)).toBe('-1,000.00 $');
+    });
+
+    // ✅ NEW - negative with space prefix
+    it('should format negative with space prefix symbol', () => {
+      expect(formatCurrency(-1000, '$ 0,0.00', enUS)).toBe('-$ 1,000.00');
+    });
+  });
 
   describe('suffix currency formatting', () => {
     it('should format with symbol suffix', () => {
@@ -57,10 +65,6 @@ describe('formatCurrency()', () => {
     });
   });
 
-  // ─────────────────────────────────────────
-  // Large Numbers
-  // ─────────────────────────────────────────
-
   describe('large currency amounts', () => {
     it('should format millions', () => {
       expect(formatCurrency(1000000, '$0,0.00', enUS)).toBe('$1,000,000.00');
@@ -70,6 +74,32 @@ describe('formatCurrency()', () => {
       expect(formatCurrency(1000000000, '$0,0.00', enUS)).toBe(
         '$1,000,000,000.00',
       );
+    });
+  });
+
+  describe('negative currency edge cases', () => {
+    it('should format negative suffix with locale suffix position', () => {
+      const suffixLocale = {
+        ...enUS,
+        currency: {
+          ...enUS.currency,
+          position: 'suffix' as const,
+          symbol: '€',
+        },
+      };
+      expect(formatCurrency(-1000, '0,0.00€', suffixLocale)).toBe('-1,000.00€');
+    });
+
+    it('should format positive with suffix locale', () => {
+      const suffixLocale = {
+        ...enUS,
+        currency: {
+          ...enUS.currency,
+          position: 'suffix' as const,
+          symbol: '€',
+        },
+      };
+      expect(formatCurrency(1000, '0,0.00€', suffixLocale)).toBe('1,000.00€');
     });
   });
 });
