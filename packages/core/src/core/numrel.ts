@@ -1,18 +1,12 @@
 import type {
-  FormatToken,
-  LocaleConfig,
-  NumrelConfig,
   NumrelInput,
   NumrelInstance,
+  NumrelConfig,
+  FormatToken,
+  LocaleConfig,
 } from '../types';
-
-// Parser
 import { parseInput } from '../parser';
-
-// Locales
 import { LocaleRegistry } from '../locales';
-
-// Maths => Operations
 import {
   add,
   subtract,
@@ -26,8 +20,6 @@ import {
   ceil,
   floor,
 } from '../math/operations';
-
-// Validation
 import {
   isValidNumber,
   isInteger,
@@ -36,7 +28,6 @@ import {
   isNegative,
   isZero,
   isFiniteNumber,
-  isNaNNumber,
   greaterThan,
   greaterThanOrEqualTo,
   lessThan,
@@ -44,13 +35,7 @@ import {
   equalTo,
   between,
 } from '../validation';
-
-// Formats
 import { format } from '../formats';
-
-// ─────────────────────────────────────────
-// Default Config
-// ─────────────────────────────────────────
 
 export const DEFAULT_CONFIG: NumrelConfig = {
   locale: 'en-US',
@@ -63,12 +48,34 @@ export const DEFAULT_CONFIG: NumrelConfig = {
 };
 
 // ─────────────────────────────────────────
-// Main Numrel Class
-// Immutable - every operation returns new instance
-// SSR Safe - no global state
+// Special internal sentinel values
 // ─────────────────────────────────────────
+const NUMREL_NAN = 'NaN' as const;
+const NUMREL_NULL = 'NULL' as const;
+type InternalValue = number | typeof NUMREL_NAN | typeof NUMREL_NULL;
+
+// ─────────────────────────────────────────
+// Parse input keeping NaN distinct from null
+// ─────────────────────────────────────────
+function parseRawInput(
+  value: NumrelInput,
+  locale: LocaleConfig,
+): InternalValue {
+  // ✅ Explicit NaN check BEFORE parseInput
+  if (typeof value === 'number' && isNaN(value)) {
+    return NUMREL_NAN;
+  }
+
+  const parsed = parseInput(value, locale);
+
+  if (parsed === null) return NUMREL_NULL;
+  return parsed;
+}
+
+/* The `Numrel` class in TypeScript provides a flexible and robust way to work with numeric values,
+including formatting, math operations, validation, and comparison methods. */
 export class Numrel implements NumrelInstance {
-  readonly #value: number | null;
+  readonly #internal: InternalValue;
   readonly #config: NumrelConfig;
   readonly #registry: LocaleRegistry;
 
@@ -79,7 +86,7 @@ export class Numrel implements NumrelInstance {
   ) {
     this.#config = config;
     this.#registry = registry;
-    this.#value = parseInput(value, registry.get(config.locale));
+    this.#internal = parseRawInput(value, registry.get(config.locale));
   }
 
   // ─────────────────────────────────────────
@@ -95,9 +102,25 @@ export class Numrel implements NumrelInstance {
     return parsed ?? 0;
   }
 
-  #new(value: number | null): NumrelInstance {
-    const instance = new Numrel(value, this.#config, this.#registry);
-    return instance;
+  #new(value: NumrelInput | typeof NUMREL_NAN): NumrelInstance {
+    if (value === NUMREL_NAN) {
+      return new Numrel(NaN, this.#config, this.#registry);
+    }
+    return new Numrel(value, this.#config, this.#registry);
+  }
+
+  #isNull(): boolean {
+    return this.#internal === NUMREL_NULL;
+  }
+
+  #isNaNInternal(): boolean {
+    return this.#internal === NUMREL_NAN;
+  }
+
+  #numericValue(): number | null {
+    if (this.#internal === NUMREL_NULL) return null;
+    if (this.#internal === NUMREL_NAN) return null;
+    return this.#internal;
   }
 
   // ─────────────────────────────────────────
@@ -105,103 +128,113 @@ export class Numrel implements NumrelInstance {
   // ─────────────────────────────────────────
 
   value(): number | null {
-    return this.#value;
+    if (this.#isNull() || this.#isNaNInternal()) return null;
+    return this.#internal as number;
   }
 
   format(formatString?: FormatToken): string {
     const fmt = formatString ?? this.#config.defaultFormat;
 
-    // Handle null
-    if (this.#value === null) {
-      return this.#config.nullFormat;
-    }
-
-    // Handle NaN
-    if (isNaN(this.#value)) {
+    // ✅ Handle NaN first (before null!)
+    if (this.#isNaNInternal()) {
       return this.#config.nanFormat;
     }
 
+    // Handle null
+    if (this.#isNull()) {
+      return this.#config.nullFormat;
+    }
+
+    const numValue = this.#internal as number;
+
     // Handle Infinity
-    if (!isFinite(this.#value)) {
-      return this.#value > 0
+    if (!isFinite(numValue)) {
+      return numValue > 0
         ? this.#config.infinityFormat
         : `-${this.#config.infinityFormat}`;
     }
 
     // Handle zero format
-    if (this.#value === 0 && this.#config.zeroFormat !== '') {
+    if (numValue === 0 && this.#config.zeroFormat !== '') {
       return this.#config.zeroFormat;
     }
 
-    return format(this.#value, fmt, this.#config, this.#getLocale());
+    return format(numValue, fmt, this.#config, this.#getLocale());
   }
 
   clone(): NumrelInstance {
-    return this.#new(this.#value);
+    return new Numrel(this.#numericValue(), this.#config, this.#registry);
   }
 
   // ─────────────────────────────────────────
-  // Math Operations (all immutable!)
+  // Math Operations
   // ─────────────────────────────────────────
 
   add(value: NumrelInput): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
-    return this.#new(add(this.#value, this.#getNumericValue(value)));
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
+    return this.#new(add(num, this.#getNumericValue(value)));
   }
 
   subtract(value: NumrelInput): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
-    return this.#new(subtract(this.#value, this.#getNumericValue(value)));
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
+    return this.#new(subtract(num, this.#getNumericValue(value)));
   }
 
   multiply(value: NumrelInput): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
-    return this.#new(multiply(this.#value, this.#getNumericValue(value)));
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
+    return this.#new(multiply(num, this.#getNumericValue(value)));
   }
 
   divide(value: NumrelInput): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
-    return this.#new(divide(this.#value, this.#getNumericValue(value)));
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
+    return this.#new(divide(num, this.#getNumericValue(value)));
   }
 
   modulo(value: NumrelInput): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
-    return this.#new(modulo(this.#value, this.#getNumericValue(value)));
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
+    return this.#new(modulo(num, this.#getNumericValue(value)));
   }
 
   power(value: NumrelInput): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
-    return this.#new(power(this.#value, this.#getNumericValue(value)));
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
+    return this.#new(power(num, this.#getNumericValue(value)));
   }
 
   abs(): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
-    return this.#new(abs(this.#value));
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
+    return this.#new(abs(num));
   }
 
   ceil(precision: number = 0): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
-    return this.#new(ceil(this.#value, precision));
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
+    return this.#new(ceil(num, precision));
   }
 
   floor(precision: number = 0): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
-    return this.#new(floor(this.#value, precision));
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
+    return this.#new(floor(num, precision));
   }
 
   round(precision: number = 0): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
-    return this.#new(round(this.#value, precision));
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
+    return this.#new(round(num, precision));
   }
 
   clamp(min: NumrelInput, max: NumrelInput): NumrelInstance {
-    if (this.#value === null) return this.#new(null);
+    const num = this.#numericValue();
+    if (num === null) return this.#new(null);
     return this.#new(
-      clamp(
-        this.#value,
-        this.#getNumericValue(min),
-        this.#getNumericValue(max),
-      ),
+      clamp(num, this.#getNumericValue(min), this.#getNumericValue(max)),
     );
   }
 
@@ -210,42 +243,49 @@ export class Numrel implements NumrelInstance {
   // ─────────────────────────────────────────
 
   isValid(): boolean {
-    return isValidNumber(this.#value);
+    const num = this.#numericValue();
+    return isValidNumber(num);
   }
 
   isInteger(): boolean {
-    if (this.#value === null) return false;
-    return isInteger(this.#value);
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return isInteger(num);
   }
 
   isFloat(): boolean {
-    if (this.#value === null) return false;
-    return isFloat(this.#value);
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return isFloat(num);
   }
 
   isPositive(): boolean {
-    if (this.#value === null) return false;
-    return isPositive(this.#value);
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return isPositive(num);
   }
 
   isNegative(): boolean {
-    if (this.#value === null) return false;
-    return isNegative(this.#value);
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return isNegative(num);
   }
 
   isZero(): boolean {
-    if (this.#value === null) return false;
-    return isZero(this.#value);
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return isZero(num);
   }
 
   isFinite(): boolean {
-    if (this.#value === null) return false;
-    return isFiniteNumber(this.#value);
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return isFiniteNumber(num);
   }
 
   isNaN(): boolean {
-    if (this.#value === null) return true;
-    return isNaNNumber(this.#value);
+    // ✅ null is NOT NaN, NaN sentinel IS NaN
+    return this.#isNaNInternal();
   }
 
   // ─────────────────────────────────────────
@@ -253,37 +293,39 @@ export class Numrel implements NumrelInstance {
   // ─────────────────────────────────────────
 
   greaterThan(value: NumrelInput): boolean {
-    if (this.#value === null) return false;
-    return greaterThan(this.#value, this.#getNumericValue(value));
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return greaterThan(num, this.#getNumericValue(value));
   }
 
   greaterThanOrEqualTo(value: NumrelInput): boolean {
-    if (this.#value === null) return false;
-    return greaterThanOrEqualTo(this.#value, this.#getNumericValue(value));
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return greaterThanOrEqualTo(num, this.#getNumericValue(value));
   }
 
   lessThan(value: NumrelInput): boolean {
-    if (this.#value === null) return false;
-    return lessThan(this.#value, this.#getNumericValue(value));
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return lessThan(num, this.#getNumericValue(value));
   }
 
   lessThanOrEqualTo(value: NumrelInput): boolean {
-    if (this.#value === null) return false;
-    return lessThanOrEqualTo(this.#value, this.#getNumericValue(value));
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return lessThanOrEqualTo(num, this.#getNumericValue(value));
   }
 
   equalTo(value: NumrelInput): boolean {
-    if (this.#value === null) return false;
-    return equalTo(this.#value, this.#getNumericValue(value));
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return equalTo(num, this.#getNumericValue(value));
   }
 
   between(min: NumrelInput, max: NumrelInput): boolean {
-    if (this.#value === null) return false;
-    return between(
-      this.#value,
-      this.#getNumericValue(min),
-      this.#getNumericValue(max),
-    );
+    const num = this.#numericValue();
+    if (num === null) return false;
+    return between(num, this.#getNumericValue(min), this.#getNumericValue(max));
   }
 
   // ─────────────────────────────────────────
@@ -295,10 +337,10 @@ export class Numrel implements NumrelInstance {
   }
 
   toJSON(): number | null {
-    return this.#value;
+    return this.#numericValue();
   }
 
   valueOf(): number {
-    return this.#value ?? 0;
+    return this.#numericValue() ?? 0;
   }
 }

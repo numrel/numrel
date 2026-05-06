@@ -1,30 +1,25 @@
-// src/formats/currency.ts
 import { applyThousandsSeparator } from './number';
 
 import type { LocaleConfig } from '../types';
 
-// ─────────────────────────────────────────
-// Currency Formatter
-// Handles: $0,0.00, 0,0.00$, ($ 0,0.00)
-// ─────────────────────────────────────────
-
 /**
- * The `formatCurrency` function in TypeScript formats a number as currency based on the provided
- * format string and locale configuration, handling options like symbol position, decimal places,
- * thousands separator, and negative values.
- * @param {number} value - The `value` parameter is the numerical value that you want to format as
- * currency. It represents the amount of money you want to convert into a specific currency format.
+ * The `formatCurrency` function in TypeScript formats a number value as currency based on the provided
+ * format string and locale configuration.
+ * @param {number} value - The `value` parameter is the numerical value that you want to format as a
+ * currency. It represents the amount of money you want to display in a specific currency format.
  * @param {string} formatString - The `formatString` parameter is a string that represents the desired
- * format for the currency value. It can include placeholders for symbols, decimal places, thousands
- * separators, and currency codes. The function `formatCurrency` uses this format string to determine
- * how the currency value should be displayed.
+ * format for the currency value. It can include placeholders for the currency symbol, code, position,
+ * and formatting options such as decimal places and thousands separators. The function
+ * `formatCurrency` uses this format string to determine how the currency value should
  * @param {LocaleConfig} locale - The `locale` parameter is an object that contains information about
- * the currency formatting for a specific region or language. It includes properties such as
- * `currency.symbol` (currency symbol like '$'), `currency.position` (position of the currency symbol),
- * and `currency.code` (currency code like 'USD').
- * @returns The `formatCurrency` function returns a formatted currency string based on the input
- * `value`, `formatString`, and `locale`. The formatted string includes the currency symbol or code,
- * decimal places, thousands separator, and handles negative values with optional accounting brackets.
+ * the currency formatting rules for a specific region or language. It typically includes properties
+ * like `currency.symbol` (currency symbol), `currency.position` (position of the currency symbol), and
+ * `currency.code` (currency code). This information is used
+ * @returns The `formatCurrency` function returns a formatted string representing the input `value` as
+ * a currency value based on the provided `formatString` and `locale` configuration. The formatting
+ * includes considerations for negative values, currency symbols or codes, decimal places, thousands
+ * separators, and the position of the currency symbol in relation to the number. The final formatted
+ * string may include the currency symbol or code, the number
  */
 export const formatCurrency = (
   value: number,
@@ -34,33 +29,21 @@ export const formatCurrency = (
   const isNegative = value < 0;
   const absValue = Math.abs(value);
 
-  // ─────────────────────────────────────────
-  // Detect Format Options
-  // ─────────────────────────────────────────
-
   const symbol = locale.currency.symbol;
   const position = locale.currency.position;
 
-  // Check for brackets (accounting format)
   const hasBrackets = formatString.includes('(') && formatString.includes(')');
-
-  // Check for space between symbol and number
   const hasSpacePrefix = formatString.includes('$ ');
   const hasSpaceSuffix = formatString.includes(' $');
+  const hasCurrencyCode = formatString.includes(locale.currency.code);
+  const hasThousands = formatString.includes(',');
 
-  // Check for currency code instead of symbol
-  const hasCurrencyCode =
-    formatString.includes('USD') || formatString.includes(locale.currency.code);
-
-  // Get decimal places
+  // ✅ KEY FIX: Only use decimals if format has '.'
   const decimalIndex = formatString.indexOf('.');
   const decimalPlaces =
     decimalIndex !== -1
       ? (formatString.slice(decimalIndex + 1).match(/0+/)?.[0]?.length ?? 0)
-      : 2; // default 2 decimal places for currency
-
-  // Check thousands
-  const hasThousands = formatString.includes(',');
+      : 0; // ✅ 0 not 2 when no decimal in format!
 
   // ─────────────────────────────────────────
   // Format The Number Part
@@ -86,16 +69,11 @@ export const formatCurrency = (
 
   let formatted: string;
 
-  // Explicit suffix in format string
   if (formatString.endsWith('$') || formatString.endsWith(' $')) {
     formatted = `${numberPart}${space}${currencyMark}`;
-  }
-  // Use locale position
-  else if (position === 'suffix') {
+  } else if (position === 'suffix') {
     formatted = `${numberPart}${space}${currencyMark}`;
-  }
-  // Default prefix
-  else {
+  } else {
     formatted = `${currencyMark}${space}${numberPart}`;
   }
 
@@ -104,17 +82,13 @@ export const formatCurrency = (
   // ─────────────────────────────────────────
 
   if (hasBrackets && isNegative) {
-    // Accounting: ($1,000.00)
     return `(${formatted})`;
   }
 
   if (isNegative) {
-    // Check where to put minus sign
     if (position === 'prefix' && !formatString.endsWith('$')) {
-      // -$1,000.00
       return `-${currencyMark}${space}${numberPart}`;
     }
-    // -1,000.00$
     return `-${formatted}`;
   }
 

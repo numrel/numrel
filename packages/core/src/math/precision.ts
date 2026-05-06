@@ -1,80 +1,132 @@
 // ─────────────────────────────────────────
 // Floating Point Precision Fixes
-// The #1 bug in Numeral.js!
 // ─────────────────────────────────────────
 
 /**
- * The function `getDecimalPlaces` calculates the number of decimal places in a given number, handling
- * exponential notation as well.
- * @param {number} value - The `value` parameter is a number for which you want to determine the number
- * of decimal places.
- * @returns The `getDecimalPlaces` function returns the number of decimal places in the given `value`.
+ * The function `getDecimalPlaces` calculates the number of decimal places in a given number.
+ * @param {number} value - The `getDecimalPlaces` function takes a number `value` as input and
+ * calculates the number of decimal places in that number. The function checks if the input number is
+ * finite, then converts it to a string to analyze its decimal representation. It handles scientific
+ * notation (e.g., 1.23
+ * @returns The function `getDecimalPlaces` returns the number of decimal places in the given `value`.
  */
-const getDecimalPlaces = (value: number): number => {
+export const getDecimalPlaces = (value: number): number => {
   if (!isFinite(value)) return 0;
 
   const str = value.toString();
 
-  // Handle exponential notation
-  if (str.includes('e')) {
-    const [base, exp] = str.split('e');
-    const expNum = parseInt(exp ?? '0', 10);
-    const baseDecimals = (base ?? '').split('.')[1]?.length ?? 0;
-    return Math.max(0, baseDecimals - expNum);
+  if (str.includes('e-')) {
+    const parts = str.split('e-');
+    const exp = parseInt(parts[1] ?? '0', 10);
+    return exp;
   }
 
-  return str.split('.')[1]?.length ?? 0;
+  if (str.includes('e')) {
+    return 0;
+  }
+
+  const decimalPart = str.split('.')[1];
+
+  return decimalPart ? decimalPart.length : 0;
 };
 
 /**
- * The `preciseOperation` function performs arithmetic operations with precision handling for addition,
- * subtraction, multiplication, and division.
- * @example Fixes: 0.1 + 0.2 = 0.30000000000000004
- * @param {number} a - The `a` parameter in the `preciseOperation` function represents the first number
- * involved in the operation (addition, subtraction, multiplication, or division).
- * @param {number} b - The `b` parameter in the `preciseOperation` function represents the second
- * number that will be used in the mathematical operation specified by the `operation` parameter. It
- * can be any valid number, positive or negative, integer or decimal, depending on the operation you
- * want to perform (addition,
- * @param {'add' | 'subtract' | 'multiply' | 'divide'} operation - The `operation` parameter in the
- * `preciseOperation` function specifies the type of mathematical operation to be performed on the two
- * input numbers `a` and `b`. The possible values for the `operation` parameter are:
- * @returns The `preciseOperation` function performs arithmetic operations on two numbers `a` and `b`
- * based on the specified operation. Depending on the operation provided ('add', 'subtract',
- * 'multiply', 'divide'), it calculates the result with precision handling for floating-point
- * arithmetic.
+ * The `preciseAdd` function in TypeScript provides a more accurate addition operation for
+ * floating-point numbers to avoid common precision issues.
+ * @param {number} a - The `a` parameter in the `preciseAdd` function represents the first number that
+ * you want to add precisely.
+ * @param {number} b - The `b` parameter in the `preciseAdd` function represents the second number that
+ * you want to add with the first number `a` while maintaining precision in the result.
+ * @returns The `preciseAdd` function returns the sum of two numbers `a` and `b` with improved
+ * precision to avoid floating-point arithmetic errors.
+ * @fixes Fixes: 0.1 + 0.2 = 0.30000000000000004
  */
-const preciseOperation = (
-  a: number,
-  b: number,
-  operation: 'add' | 'subtract' | 'multiply' | 'divide',
-): number => {
+export const preciseAdd = (a: number, b: number): number => {
   const aDecimals = getDecimalPlaces(a);
+
   const bDecimals = getDecimalPlaces(b);
+
   const multiplier = Math.pow(10, Math.max(aDecimals, bDecimals));
 
   const aInt = Math.round(a * multiplier);
+
   const bInt = Math.round(b * multiplier);
 
-  switch (operation) {
-    case 'add':
-      return (aInt + bInt) / multiplier;
+  return (aInt + bInt) / multiplier;
+};
 
-    case 'subtract':
-      return (aInt - bInt) / multiplier;
+/**
+ * The `preciseSubtract` function calculates the precise subtraction of two numbers with decimal places
+ * taken into account.
+ * @param {number} a - The `a` parameter in the `preciseSubtract` function represents the first number
+ * from which the second number will be subtracted with precision.
+ * @param {number} b - Thank you for providing the code snippet. Could you please clarify what
+ * information you would like to know about parameter `b`?
+ * @returns The `preciseSubtract` function is returning the result of subtracting two numbers `a` and
+ * `b` with precision. It calculates the difference between the two numbers after considering their
+ * decimal places and returns the result with the correct precision.
+ */
+export const preciseSubtract = (a: number, b: number): number => {
+  const aDecimals = getDecimalPlaces(a);
 
-    case 'multiply': {
-      // For multiply we need different approach
-      const result = (aInt * bInt) / (multiplier * multiplier);
-      return parseFloat(result.toPrecision(15));
-    }
+  const bDecimals = getDecimalPlaces(b);
 
-    case 'divide': {
-      if (bInt === 0) throw new Error('[numrel] Division by zero');
-      const result = aInt / bInt;
-      return parseFloat(result.toPrecision(15));
-    }
-  }
+  const multiplier = Math.pow(10, Math.max(aDecimals, bDecimals));
+
+  const aInt = Math.round(a * multiplier);
+
+  const bInt = Math.round(b * multiplier);
+
+  return (aInt - bInt) / multiplier;
+};
+
+/**
+ * The `preciseMultiply` function in TypeScript calculates the product of two numbers with precision
+ * handling for decimal places.
+ * @param {number} a - The `preciseMultiply` function takes two parameters `a` and `b`, both of type
+ * number. The function calculates the product of these two numbers with precision handling for decimal
+ * places.
+ * @param {number} b - Thank you for providing the code snippet. Could you please provide the value of
+ * parameter `b` so that I can assist you further with the precise multiplication function?
+ * @returns The `preciseMultiply` function returns the result of multiplying two numbers `a` and `b`
+ * with precision handling for decimal places.
+ */
+export const preciseMultiply = (a: number, b: number): number => {
+  const aDecimals = getDecimalPlaces(a);
+
+  const bDecimals = getDecimalPlaces(b);
+
+  const multiplier = Math.pow(10, aDecimals + bDecimals);
+
+  const aInt = Math.round(a * Math.pow(10, aDecimals));
+
+  const bInt = Math.round(b * Math.pow(10, bDecimals));
+
+  return (aInt * bInt) / multiplier;
+};
+
+/**
+ * The `preciseDivide` function in TypeScript performs division between two numbers and cleans up
+ * floating point artifacts for more accurate results.
+ * @param {number} a - Thank you for providing the code snippet. Could you please provide the value of
+ * parameter `a` so that I can assist you further?
+ * @param {number} b - Thank you for providing the code snippet. Could you please clarify what specific
+ * information or value you would like to know about parameter `b`?
+ * @returns The `preciseDivide` function returns the result of dividing `a` by `b`, with floating point
+ * artifacts cleaned up using `toPrecision(12)`.
+ */
+export const preciseDivide = (a: number, b: number): number => {
+  if (b === 0) throw new Error('[numrel] Division by zero');
+
+  // Direct division is actually correct for most cases
+  // We just clean up floating point artifacts
+
+  const result = a / b;
+
+  // Clean up floating point artifacts using toPrecision
+  const cleaned = parseFloat(result.toPrecision(12));
+
+  return cleaned;
 };
 
 /**
@@ -83,13 +135,13 @@ const preciseOperation = (
  * @param {number} value - The `value` parameter is the number that you want to round to a specific
  * number of decimal places.
  * @param {number} [decimals=0] - The `decimals` parameter in the `preciseRound` function specifies the
- * number of decimal places to round the `value` to. By default, if no value is provided for
- * `decimals`, it will be set to 0, meaning the function will round the `value` to the
- * @returns The function `preciseRound` is returning a number that has been rounded to the specified
+ * number of decimal places to round the `value` to. By default, if the `decimals` parameter is not
+ * provided when calling the function, it is set to 0, which means the function will round the
+ * @returns The `preciseRound` function is returning a number that has been rounded to the specified
  * number of decimal places.
- * @example Fixes: 1.005 rounding to 1.00 instead of 1.01
+ * @fixes - Fixes 1.005 rounding bug
  */
-const preciseRound = (value: number, decimals: number = 0): number => {
+export const preciseRound = (value: number, decimals: number = 0): number => {
   const multiplier = Math.pow(10, decimals);
 
   return (
@@ -98,17 +150,17 @@ const preciseRound = (value: number, decimals: number = 0): number => {
 };
 
 /**
- * The `preciseCeil` function rounds a number up to a specified number of decimal places with
- * precision.
- * @param {number} value - The `value` parameter is the number that you want to round up to the nearest
- * integer or a specified number of decimal places.
+ * The `preciseCeil` function in TypeScript rounds up a number to a specified number of decimal places
+ * with precision.
+ * @param {number} value - The `value` parameter is the number that you want to round up to a precise
+ * ceiling value.
  * @param {number} [decimals=0] - The `decimals` parameter in the `preciseCeil` function specifies the
- * number of decimal places to round the `value` to before applying the `Math.ceil` function. By
- * default, if the `decimals` parameter is not provided when calling the function, it is set to
- * @returns The function `preciseCeil` returns the input `value` rounded up to the nearest integer with
- * the specified number of `decimals`.
+ * number of decimal places to round the `value` to. By default, if no value is provided for
+ * `decimals`, it is set to 0, which means the `value` will be rounded to the
+ * @returns The `preciseCeil` function returns a number that is the result of rounding up the `value`
+ * parameter to the specified number of `decimals` using precise arithmetic calculations.
  */
-const preciseCeil = (value: number, decimals: number = 0): number => {
+export const preciseCeil = (value: number, decimals: number = 0): number => {
   const multiplier = Math.pow(10, decimals);
 
   return (
@@ -117,29 +169,20 @@ const preciseCeil = (value: number, decimals: number = 0): number => {
 };
 
 /**
- * The `preciseFloor` function rounds a number to a specified number of decimal places with precision.
+ * The `preciseFloor` function in TypeScript rounds down a number to a specified number of decimal
+ * places with precision.
  * @param {number} value - The `value` parameter is the number that you want to round down to a
  * specific number of decimal places.
  * @param {number} [decimals=0] - The `decimals` parameter in the `preciseFloor` function specifies the
  * number of decimal places to which you want to floor the `value`. By default, if the `decimals`
  * parameter is not provided when calling the function, it is set to 0, meaning the function will floor
- * @returns The `preciseFloor` function is returning a number that is the result of flooring the value
- * multiplied by 10 to the power of the specified decimals, divided by the same multiplier. The value
- * is first multiplied by the multiplier to shift the decimal point to the right based on the number of
- * decimals specified. The `toPrecision(15)` method is used to ensure precision up to 15 digits before
+ * @returns The `preciseFloor` function returns a number that is the result of flooring the input
+ * `value` to a specified number of `decimals`.
  */
-const preciseFloor = (value: number, decimals: number = 0): number => {
+export const preciseFloor = (value: number, decimals: number = 0): number => {
   const multiplier = Math.pow(10, decimals);
 
   return (
     Math.floor(parseFloat((value * multiplier).toPrecision(15))) / multiplier
   );
-};
-
-export {
-  getDecimalPlaces,
-  preciseCeil,
-  preciseFloor,
-  preciseOperation,
-  preciseRound,
 };
