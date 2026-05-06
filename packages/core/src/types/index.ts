@@ -72,6 +72,7 @@ export interface LocaleCurrency {
   symbol: string;
   position: 'prefix' | 'suffix';
   code: string;
+  spaceBetween: boolean; // ✅ NEW - space between number and symbol
 }
 
 export interface LocaleConfig {

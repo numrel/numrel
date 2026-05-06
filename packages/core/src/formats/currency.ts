@@ -33,25 +33,27 @@ export const formatCurrency = (
   const position = locale.currency.position;
   const code = locale.currency.code;
 
-  // ─────────────────────────────────────────
-  // Detect Format Options
-  // ─────────────────────────────────────────
-
   const hasBrackets = formatString.includes('(') && formatString.includes(')');
 
-  // ✅ FIX: Detect space for BOTH symbol and code
-  const hasSpacePrefix =
+  // ✅ Use locale spaceBetween as default
+  // But allow format string to override
+  const hasExplicitSpacePrefix =
     formatString.includes(`${symbol} `) || formatString.includes(`${code} `);
 
-  const hasSpaceSuffix =
+  const hasExplicitSpaceSuffix =
     formatString.includes(` ${symbol}`) || formatString.includes(` ${code}`);
 
-  // ✅ FIX: Check currency code properly
-  const hasCurrencyCode = formatString.includes(code);
+  // ✅ Determine space from locale config
+  const space =
+    hasExplicitSpacePrefix ||
+    hasExplicitSpaceSuffix ||
+    locale.currency.spaceBetween
+      ? ' '
+      : '';
 
+  const hasCurrencyCode = formatString.includes(code);
   const hasThousands = formatString.includes(',');
 
-  // ✅ Only use decimals if format has '.'
   const decimalIndex = formatString.indexOf('.');
   const decimalPlaces =
     decimalIndex !== -1
@@ -59,7 +61,7 @@ export const formatCurrency = (
       : 0;
 
   // ─────────────────────────────────────────
-  // Format The Number Part
+  // Format Number Part
   // ─────────────────────────────────────────
 
   let numberPart = absValue.toFixed(decimalPlaces);
@@ -71,19 +73,15 @@ export const formatCurrency = (
   }
 
   // ─────────────────────────────────────────
-  // Determine Symbol or Code
+  // Determine Currency Mark
   // ─────────────────────────────────────────
 
   const currencyMark = hasCurrencyCode ? code : symbol;
-
-  // ✅ FIX: Space based on what was detected
-  const space = hasSpacePrefix || hasSpaceSuffix ? ' ' : '';
 
   // ─────────────────────────────────────────
   // Determine Position
   // ─────────────────────────────────────────
 
-  // Check if format explicitly puts mark at end
   const isExplicitSuffix =
     formatString.endsWith(symbol) ||
     formatString.endsWith(` ${symbol}`) ||
@@ -92,12 +90,9 @@ export const formatCurrency = (
 
   let formatted: string;
 
-  if (isExplicitSuffix) {
-    formatted = `${numberPart}${space}${currencyMark}`;
-  } else if (position === 'suffix') {
+  if (isExplicitSuffix || position === 'suffix') {
     formatted = `${numberPart}${space}${currencyMark}`;
   } else {
-    // ✅ Prefix with correct space
     formatted = `${currencyMark}${space}${numberPart}`;
   }
 

@@ -2,11 +2,6 @@ import { enUS } from './en-US';
 
 import type { LocaleConfig } from '../types';
 
-// ─────────────────────────────────────────
-// Locale Registry - SSR Safe
-// No global mutable state!
-// ─────────────────────────────────────────
-
 export class LocaleRegistry {
   readonly #locales: Map<string, LocaleConfig>;
   #currentLocale: string;
@@ -14,8 +9,6 @@ export class LocaleRegistry {
   constructor() {
     this.#locales = new Map();
     this.#currentLocale = 'en-US';
-
-    // Register default locale
     this.register(enUS);
   }
 
@@ -26,23 +19,19 @@ export class LocaleRegistry {
   get(name?: string): LocaleConfig {
     const localeName = name ?? this.#currentLocale;
     const locale = this.#locales.get(localeName);
-
     if (!locale) {
-      // Fallback to en-US if locale not found
       console.warn(
         `[numrel] Locale "${localeName}" not found, falling back to en-US`,
       );
       return enUS;
     }
-
     return locale;
   }
 
   setCurrent(name: string): void {
     if (!this.#locales.has(name)) {
       throw new Error(
-        `[numrel] Cannot set locale "${name}" - not registered. 
-         Register it first with registerLocale()`,
+        `[numrel] Cannot set locale "${name}" - not registered. Register it first with registerLocale()`,
       );
     }
     this.#currentLocale = name;

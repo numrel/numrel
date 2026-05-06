@@ -1,18 +1,19 @@
 import type { LocaleConfig } from '../types';
 
-export const enUS: LocaleConfig = {
-  name: 'en-US',
+export const enIN: LocaleConfig = {
+  name: 'en-IN',
   delimiters: {
     thousands: ',',
     decimal: '.',
   },
   abbreviations: {
-    thousand: 'k',
-    million: 'm',
-    billion: 'b',
-    trillion: 't',
+    thousand: 'K',
+    million: 'M',
+    billion: 'B',
+    trillion: 'T',
   },
   ordinal: (number: number): string => {
+    // Same as en-US
     const abs = Math.abs(number);
     const mod10 = abs % 10;
     const mod100 = abs % 100;
@@ -28,9 +29,9 @@ export const enUS: LocaleConfig = {
     return 'th';
   },
   currency: {
-    symbol: '$',
-    position: 'prefix',
-    code: 'USD',
-    spaceBetween: false, // $1,000.00 → no space
+    symbol: '₹',
+    position: 'prefix', // India: ₹1,00,000.00
+    code: 'INR',
+    spaceBetween: false, // ₹1,000.00 → no space
   },
 };

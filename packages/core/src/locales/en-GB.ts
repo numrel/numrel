@@ -1,7 +1,7 @@
 import type { LocaleConfig } from '../types';
 
-export const enUS: LocaleConfig = {
-  name: 'en-US',
+export const enGB: LocaleConfig = {
+  name: 'en-GB',
   delimiters: {
     thousands: ',',
     decimal: '.',
@@ -9,8 +9,8 @@ export const enUS: LocaleConfig = {
   abbreviations: {
     thousand: 'k',
     million: 'm',
-    billion: 'b',
-    trillion: 't',
+    billion: 'bn', // UK uses 'bn' not 'b'
+    trillion: 'tn', // UK uses 'tn' not 't'
   },
   ordinal: (number: number): string => {
     const abs = Math.abs(number);
@@ -28,9 +28,9 @@ export const enUS: LocaleConfig = {
     return 'th';
   },
   currency: {
-    symbol: '$',
+    symbol: '£',
     position: 'prefix',
-    code: 'USD',
-    spaceBetween: false, // $1,000.00 → no space
+    code: 'GBP',
+    spaceBetween: false, // £1,000.00 → no space
   },
 };
