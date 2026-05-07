@@ -1,5 +1,29 @@
 import type { LocaleConfig } from '../types';
 
+/**
+ * 🇮🇹 Italian - Italy (it)
+ *
+ * @example
+ * ```ts
+ * import { it } from '@numrel/core';
+ *
+ * const n = createNumrel();
+ * n.registerLocale(it);
+ * const italian = n.locale('it');
+ *
+ * italian(1234567.89).format('0,0.00')  // → '1.234.567,89'
+ * italian(1000).format('$0,0.00')       // → '1.000,00 €'
+ * italian(1).format('0o')               // → '1°'
+ * italian(1000000).format('0a')         // → '1Mln'
+ * ```
+ *
+ * @remarks
+ * - Thousands separator: `.` (dot)
+ * - Decimal separator: `,` (comma)
+ * - Currency: `€` EUR (suffix with space)
+ * - Ordinals: 1° 2° 3° (degree symbol)
+ * - Abbreviations: mila, Mln, Mrd, Bln
+ */
 export const it: LocaleConfig = {
   name: 'it',
   delimiters: {

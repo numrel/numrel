@@ -1,5 +1,29 @@
 import type { LocaleConfig } from '../types';
 
+/**
+ * 🇮🇳 English - India (en-IN)
+ *
+ * @example
+ * ```ts
+ * import { enIN } from '@numrel/core';
+ *
+ * const n = createNumrel();
+ * n.registerLocale(enIN);
+ * const india = n.locale('en-IN');
+ *
+ * india(1234567.89).format('0,0.00')  // → '1,234,567.89'
+ * india(1000).format('$0,0.00')       // → '₹1,000.00'
+ * india(1).format('0o')               // → '1st'
+ * india(1000000).format('0a')         // → '1M'
+ * ```
+ *
+ * @remarks
+ * - Thousands separator: `,` (comma)
+ * - Decimal separator: `.` (dot)
+ * - Currency: `₹` INR (prefix, no space)
+ * - Ordinals: 1st, 2nd, 3rd, 4th
+ * - Abbreviations: K, M, B, T (uppercase)
+ */
 export const enIN: LocaleConfig = {
   name: 'en-IN',
   delimiters: {

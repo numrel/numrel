@@ -1,5 +1,29 @@
 import type { LocaleConfig } from '../types';
 
+/**
+ * 🇸🇦 Arabic - Saudi Arabia (ar)
+ *
+ * @example
+ * ```ts
+ * import { ar } from '@numrel/core';
+ *
+ * const n = createNumrel();
+ * n.registerLocale(ar);
+ * const arabic = n.locale('ar');
+ *
+ * arabic(1234567).format('0,0')       // → '1٬234٬567'
+ * arabic(1000).format('$0,0')         // → '1٬000 ر.س'
+ * arabic(1000).format('0a')           // → '1ألف'
+ * arabic(1000000).format('0a')        // → '1مليون'
+ * ```
+ *
+ * @remarks
+ * - Thousands separator: `٬` (Arabic thousands separator)
+ * - Decimal separator: `٫` (Arabic decimal separator)
+ * - Currency: `ر.س` SAR (suffix with space)
+ * - RTL language - currency always appears on the right
+ * - Abbreviations in Arabic: ألف, مليون, مليار, تريليون
+ */
 export const ar: LocaleConfig = {
   name: 'ar',
   delimiters: {

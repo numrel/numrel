@@ -1,5 +1,30 @@
 import type { LocaleConfig } from '../types';
 
+/**
+ * 🇬🇧 English - United Kingdom (en-GB)
+ *
+ * @example
+ * ```ts
+ * import { enGB } from '@numrel/core';
+ *
+ * const n = createNumrel();
+ * n.registerLocale(enGB);
+ * const uk = n.locale('en-GB');
+ *
+ * uk(1234567.89).format('0,0.00')   // → '1,234,567.89'
+ * uk(1000).format('$0,0.00')        // → '£1,000.00'
+ * uk(1).format('0o')                // → '1st'
+ * uk(1000000000).format('0.0a')     // → '1.0bn'
+ * ```
+ *
+ * @remarks
+ * - Thousands separator: `,` (comma)
+ * - Decimal separator: `.` (dot)
+ * - Currency: `£` GBP (prefix)
+ * - Ordinals: 1st, 2nd, 3rd, 4th
+ * - Billion abbreviation: `bn` (not `b`)
+ * - Trillion abbreviation: `tn` (not `t`)
+ */
 export const enGB: LocaleConfig = {
   name: 'en-GB',
   delimiters: {

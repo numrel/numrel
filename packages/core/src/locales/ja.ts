@@ -1,5 +1,30 @@
 import type { LocaleConfig } from '../types';
 
+/**
+ * 🇯🇵 Japanese - Japan (ja)
+ *
+ * @example
+ * ```ts
+ * import { ja } from '@numrel/core';
+ *
+ * const n = createNumrel();
+ * n.registerLocale(ja);
+ * const japanese = n.locale('ja');
+ *
+ * japanese(1234567).format('0,0')     // → '1,234,567'
+ * japanese(1000).format('$0,0')       // → '¥1,000'
+ * japanese(1).format('0o')            // → '1番'
+ * japanese(1000).format('0a')         // → '1千'
+ * japanese(1000000).format('0a')      // → '1百万'
+ * ```
+ *
+ * @remarks
+ * - Thousands separator: `,` (comma)
+ * - Decimal separator: `.` (dot)
+ * - Currency: `¥` JPY (prefix, no space)
+ * - Ordinals: 番 (ban)
+ * - Abbreviations: 千, 百万, 十億, 兆
+ */
 export const ja: LocaleConfig = {
   name: 'ja',
   delimiters: {

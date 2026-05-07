@@ -1,5 +1,29 @@
 import type { LocaleConfig } from '../types';
 
+/**
+ * 🇹🇷 Turkish - Turkey (tr)
+ *
+ * @example
+ * ```ts
+ * import { tr } from '@numrel/core';
+ *
+ * const n = createNumrel();
+ * n.registerLocale(tr);
+ * const turkish = n.locale('tr');
+ *
+ * turkish(1234567.89).format('0,0.00')  // → '1.234.567,89'
+ * turkish(1000).format('$0,0')          // → '₺1.000'
+ * turkish(1).format('0o')               // → "1'inci"
+ * turkish(1000).format('0a')            // → '1B'
+ * ```
+ *
+ * @remarks
+ * - Thousands separator: `.` (dot)
+ * - Decimal separator: `,` (comma)
+ * - Currency: `₺` TRY (prefix, no space)
+ * - Ordinals: vowel harmony based (Turkish grammar)
+ * - Abbreviations: B (bin), Mn, Mr, Tr
+ */
 export const tr: LocaleConfig = {
   name: 'tr',
   delimiters: {
